@@ -27,14 +27,29 @@ MESSAGE(STATUS "-------- MAIN CMAKELISTS MSG --------")
 # 用户执行cmake指令的路径:
 #     PROJECT_BINARY_DIR
 #     <projectname>_BINARY_DIR
+# CMAKE_CURRENT_LIST_FILE: 输出调用这个变量的 CMakeLists.txt 的完整路径
+# CMAKE_CURRENT_LIST_LINE：输出这个变量所在的行
+# CMAKE_CURRENT_SOURCE_DIR：当前处理的 CMakeLists.txt 所在的路径
+# CMAKE_CURRRENT_BINARY_DIR：如果是 in-source 编译，它跟 CMAKE_CURRENT_SOURCE_DIR 一致，如果是 out-of-source编译，他指的是 target 编译目录。
+#     CMAKE_CURRENT_BINARY_DIR 和 CMAKE_CURRENT_SOURCE_DIR 是面向 CMakeLists.txt 文件的源和目标根目录，而不像 PROJECT_SOURCE_DIR 和 PROJECTE_BINARY_DIR 是面向整个项目的源和目标的根目录
+# CMAKE_MODULE_PATH：这个变量用来定义自己的 cmake 模块所在的路径。如果你的工程比较复杂，有可能会自己编写一些 cmake 模块，这些 cmake 模块是随你的工程发布的，为了让 cmake 在处理CMakeLists.txt 时找到这些模块，
+#     你需要通过 SET 指令，将自己的 cmake 模块路径设置一下。注意，CMAKE_MODULE_PATH有高优先级，当需要重写标准Find<package>.cmake文件时可能很有用。
 MESSAGE(STATUS "    PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 MESSAGE(STATUS "    mDemoPrj_SOURCE_DIR: " ${mDemoPrj_SOURCE_DIR})
 MESSAGE(STATUS "    PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR})
 MESSAGE(STATUS "    mDemoPrj_BINARY_DIR: " ${mDemoPrj_BINARY_DIR})
 MESSAGE(STATUS "    CMAKE_ROOTR: " ${CMAKE_ROOT})
+MESSAGE(STATUS "    CMAKE_CURRENT_LIST_FILE: " ${CMAKE_CURRENT_LIST_FILE})
+MESSAGE(STATUS "    CMAKE_CURRENT_LIST_LINE: " ${CMAKE_CURRENT_LIST_LINE})
+MESSAGE(STATUS "    CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
+MESSAGE(STATUS "    CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 让 CMake 支持 gdb 只需要指定 Debug 模式下开启 -g 选项:
+# 如果以变量作为 if 的判断条件，只要非空就是有效
 SET(CMAKE_BUILD_TYPE "Debug")
+if(CMAKE_BUILD_TYPE)
+    MESSAGE(STATUS "    -- enter CMAKE_BUILD_TYPE --")
+endif(CMAKE_BUILD_TYPE)
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 # 指定编译器
@@ -44,11 +59,8 @@ SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 # 变量 CMAKE_INCLUDE_CURRENT_DIR 的作用
 # 自动添加 CMAKE_CURRENT_BINARY_DIR 和 CMAKE_CURRENT_SOURCE_DIR 到当前处理的 CMakeLists.txt。相当于在每个 CMakeLists.txt 加入:
 # INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-# CMAKE_CURRENT_BINARY_DIR 和 CMAKE_CURRENT_SOURCE_DIR 是面向 CMakeLists.txt 文件的源和目标根目录，而不像 PROJECT_SOURCE_DIR 和 PROJECTE_BINARY_DIR 是面向整个项目的源和目标的根目录
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)  # 不知道为什么失灵
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-MESSAGE(STATUS "    CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
-MESSAGE(STATUS "    CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
 
 # 指定生成链接链接库的存放路径,不指定的话默认是存放在跟当前 CMakeLists.txt 一样的路径
 # 该设置也可以跟随 ADD_LIBRARY 指令，放在该指令之前，这样控制更精确
@@ -92,6 +104,7 @@ MESSAGE(STATUS "    USE_MYMATH is: " ${USE_MYMATH})
 
 # 是否加入 MathFunctions 库
 if (USE_MYMATH)
+    MESSAGE(STATUS "    USE_MYMATH is valid")
     INCLUDE_DIRECTORIES ("${PROJECT_SOURCE_DIR}/src/math")
     ADD_SUBDIRECTORY (src/math)
     SET (EXTRA_LIBS ${EXTRA_LIBS} mathFunctions)
@@ -136,7 +149,7 @@ INSTALL(FILES "${PROJECT_BINARY_DIR}/config.h" DESTINATION include)
 
 # ======================================================================================================================== 使用外部库
 # 原始方法
-# 使用外部库最基础的写法是需要一下三个部分
+# 使用外部库最基础的写法是需要以下三个部分
 #     1. INCLUDE_DIRECTORIES  对应 gcc/g++ 的 -I 参数，写在顶层主调 CMakeLists.txt 中就可以，可以传递到子文件夹中
 #     2. LINK_DIRECTORIES 对应 gcc/g++ 的 -L 参数,指定库文件的路径
 #     3. TARGET_LINK_LIBRARIES 对应 gcc/g++ 的 -l 参数，为了方便使用可以在第2步之后使用一个变量保存用到的库 (SET(......))
