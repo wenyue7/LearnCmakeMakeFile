@@ -1,3 +1,4 @@
+# ======================================================================================================================== base options end
 #指定运行此配置文件所需的 CMake 的最低版本
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -33,7 +34,7 @@ MESSAGE(STATUS "-------- MAIN CMAKELISTS MSG --------")
 # CMAKE_CURRRENT_BINARY_DIR：如果是 in-source 编译，它跟 CMAKE_CURRENT_SOURCE_DIR 一致，如果是 out-of-source编译，他指的是 target 编译目录。
 #     CMAKE_CURRENT_BINARY_DIR 和 CMAKE_CURRENT_SOURCE_DIR 是面向 CMakeLists.txt 文件的源和目标根目录，而不像 PROJECT_SOURCE_DIR 和 PROJECTE_BINARY_DIR 是面向整个项目的源和目标的根目录
 # CMAKE_MODULE_PATH：这个变量用来定义自己的 cmake 模块所在的路径。如果你的工程比较复杂，有可能会自己编写一些 cmake 模块，这些 cmake 模块是随你的工程发布的，为了让 cmake 在处理CMakeLists.txt 时找到这些模块，
-#     你需要通过 SET 指令，将自己的 cmake 模块路径设置一下。注意，CMAKE_MODULE_PATH有高优先级，当需要重写标准Find<package>.cmake文件时可能很有用。
+# 你需要通过 SET 指令，将自己的 cmake 模块路径设置一下。注意，CMAKE_MODULE_PATH有高优先级，当需要重写标准Find<package>.cmake文件时可能很有用。
 MESSAGE(STATUS "    PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
 MESSAGE(STATUS "    mDemoPrj_SOURCE_DIR: " ${mDemoPrj_SOURCE_DIR})
 MESSAGE(STATUS "    PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR})
@@ -71,6 +72,7 @@ MESSAGE(STATUS "    After set LIBRARY_OUTPUT_PATH: " ${LIBRARY_OUTPUT_PATH})
 # 指定生成可执行文件后的存放路径
 # 该设置也可以跟随 ADD_EXECUTABLE 指令，放在该指令之前，这样控制更精确
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+# ======================================================================================================================== base options end
 
 
 # ======================================================================================================================== custome compile options
@@ -185,37 +187,37 @@ ADD_TEST(test_run ${PROJECT_BINARY_DIR}/bin/demo 5 2)
 # 测试帮助信息是否可以正常提示
 add_test (test_usage ${PROJECT_BINARY_DIR}/bin/demo)
 set_tests_properties (test_usage
-  PROPERTIES PASS_REGULAR_EXPRESSION "Usage: .* base exponent")
+    PROPERTIES PASS_REGULAR_EXPRESSION "Usage: .* base exponent")
 
 # 测试 5 的平方
 add_test (test_5_2 ${PROJECT_BINARY_DIR}/bin/demo 5 2)
 
 set_tests_properties (test_5_2
- PROPERTIES PASS_REGULAR_EXPRESSION "is 25")
+    PROPERTIES PASS_REGULAR_EXPRESSION "is 25")
 
 # 测试 10 的 5 次方
 add_test (test_10_5 ${PROJECT_BINARY_DIR}/bin/demo 10 5)
 
 set_tests_properties (test_10_5
- PROPERTIES PASS_REGULAR_EXPRESSION "is 100000")
+    PROPERTIES PASS_REGULAR_EXPRESSION "is 100000")
 
 # 测试 2 的 10 次方
 add_test (test_2_10 ${PROJECT_BINARY_DIR}/bin/demo 2 10)
 
 set_tests_properties (test_2_10
- PROPERTIES PASS_REGULAR_EXPRESSION "is 1024")
+    PROPERTIES PASS_REGULAR_EXPRESSION "is 1024")
 
 # 上面的代码包含了四个测试。第一个测试 test_run 用来测试程序是否成功运行并返回 0 值。剩下的三个测试分别用来测试 5 的 平方、10 的 5 次方、2 的 10 次方是否都能得到正确的结果。其中 PASS_REGULAR_EXPRESSION 用来测试输出是否包含后面跟着的字符串。
 
 # 如果要测试更多的输入数据，像上面那样一个个写测试用例未免太繁琐。这时可以通过编写宏来实现：
 # 定义一个宏，用来简化测试工作
 # macro (do_test arg1 arg2 result)
-#   add_test (test_${arg1}_${arg2} ${PROJECT_BINARY_DIR}/bin/demo ${arg1} ${arg2})
-#   set_tests_properties (test_${arg1}_${arg2}
-#     PROPERTIES PASS_REGULAR_EXPRESSION ${result})
+#     add_test (test_${arg1}_${arg2} ${PROJECT_BINARY_DIR}/bin/demo ${arg1} ${arg2})
+#     set_tests_properties (test_${arg1}_${arg2}
+#         PROPERTIES PASS_REGULAR_EXPRESSION ${result})
 # endmacro (do_test)
-#  
-# # 使用该宏进行一系列的数据测试
+ 
+# 使用该宏进行一系列的数据测试
 # do_test (5 2 "is 25")
 # do_test (10 5 "is 100000")
 # do_test (2 10 "is 1024")
@@ -223,6 +225,19 @@ set_tests_properties (test_2_10
 
 # ======================================================================================================================== CPack 包
 # 构建一个 CPack 安装包
+# include(<file|module> [OPTIONAL] [RESULT_VARIABLE <var>] [NO_POLICY_SCOPE])
+# Loads and runs CMake code from the file given. Variable reads and writes access the scope of the 
+# caller (dynamic scoping). If OPTIONAL is present, then no error is raised if the file does not exist. 
+# If RESULT_VARIABLE is given the variable <var> will be set to the full filename which has been 
+# included or NOTFOUND if it failed.
+
+# If a module is specified instead of a file, the file with name <modulename>.cmake is searched first in 
+# CMAKE_MODULE_PATH, then in the CMake module directory. There is one exception to this: if the file which 
+# calls include() is located itself in the CMake builtin module directory, then first the CMake builtin 
+# module directory is searched and CMAKE_MODULE_PATH afterwards. See also policy CMP0017.
+
+# See the cmake_policy() command documentation for discussion of the NO_POLICY_SCOPE option.
+
 include (InstallRequiredSystemLibraries)
 set (CPACK_RESOURCE_FILE_LICENSE
   "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
