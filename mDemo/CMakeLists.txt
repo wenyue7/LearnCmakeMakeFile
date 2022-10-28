@@ -131,6 +131,69 @@ if (USE_MYMATH)
 endif (USE_MYMATH)
 # ============================================================================== custome compile options end
 
+# ============================================================================== add git info 
+#-- ver 1 直接由CMake写文件
+FIND_PACKAGE(Git)
+# 生成版本描述字符串类似 TAG-X-gHASH
+EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} describe --abbrev=6 --dirty --always --tags
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE  GIT_REPO_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# 获取最新提交作者
+EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} log -1 --format=%an
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE  GIT_REPO_AUTHOR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+# 获取最新 commit 日期，YYYY-MM-DD
+EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} log -1 --format=%cd --date=short
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE  GIT_REPO_DATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+# 获取最新 commit Hash
+EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE  GIT_REPO_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+# 写入头文件宏定义的版本字符串，日期和 Hash
+FILE(WRITE ${PROJECT_BINARY_DIR}/git_version.h
+    "#define GIT_VERSION \"${GIT_REPO_VERSION}\"\n#define GIT_AUTHOR \"${GIT_REPO_AUTHOR}\"\n#define GIT_DATE \"${GIT_REPO_DATE}\"\n#define GIT_HASH \"${GIT_REPO_HASH}\"\n"
+)
+# 包含引用目录，源文件可以直接用 #include "git_version.h" 包含
+INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR})
+
+
+#-- ver 2 借助config
+
+SET(GIT_LOG_FORMAT "%h author: %<|(30)%an %cd %s %d")
+
+EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} log -1 --oneline --date=short --pretty=format:${GIT_LOG_FORMAT}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE EXEC_OUT
+    ERROR_VARIABLE EXEC_ERROR
+    RESULT_VARIABLE EXEC_RET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_STRIP_TRAILING_WHITESPACE)
+
+if (NOT EXEC_RET)
+    SET(VERSION_LOG ${EXEC_OUT})
+    STRING(REPLACE "\"" "\\\"" VERSION_LOG ${VERSION_LOG})
+    MESSAGE(STATUS "git version: "${VERSION_LOG})
+    SET(VERSION_HISTORY "\"${VERSION_LOG}\"")
+endif()
+
+# 从新生成 config.h 以包含版本信息
+CONFIGURE_FILE (
+    "${PROJECT_SOURCE_DIR}/config.h.in"
+    "${PROJECT_BINARY_DIR}/config.h"
+    )
+
+# ============================================================================== add git info end
+
 # ============================================================================== cmake 脚本
 
 # include 指令用法：

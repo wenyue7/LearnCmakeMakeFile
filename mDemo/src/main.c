@@ -8,6 +8,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include"config.h"
+#include"git_version.h"
 
 #ifndef USE_MYMATH
   #include<math.h>
@@ -17,11 +18,20 @@
 
 int main(int argc, char* argv[])
 {
+    printf("version: %s\n", GIT_VERSION);
+    printf("author:  %s\n", GIT_AUTHOR);
+    printf("date:    %s\n", GIT_DATE);
+    printf("hash:    %s\n", GIT_HASH);
+    printf("\n");
+    printf("ver_log: %s\n", VER_INFO);
+    printf("\n");
+
 #ifdef MACRO_MAIN
     printf("have define macro: MACRO_MAIN in .cmake\n");
 #else
     printf("not define macro: MACRO_MAIN in .cmake\n");
 #endif
+
     if (argc < 3){
         // print version info
         printf("%s Version %d.%d\n", argv[0], Demo_VERSION_MAJOR, Demo_VERSION_MINOR);
