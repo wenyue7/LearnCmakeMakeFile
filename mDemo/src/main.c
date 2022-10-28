@@ -17,6 +17,11 @@
 
 int main(int argc, char* argv[])
 {
+#ifdef MACRO_MAIN
+    printf("have define macro: MACRO_MAIN in .cmake\n");
+#else
+    printf("not define macro: MACRO_MAIN in .cmake\n");
+#endif
     if (argc < 3){
         // print version info
         printf("%s Version %d.%d\n", argv[0], Demo_VERSION_MAJOR, Demo_VERSION_MINOR);

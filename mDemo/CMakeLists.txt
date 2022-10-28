@@ -131,6 +131,50 @@ if (USE_MYMATH)
 endif (USE_MYMATH)
 # ============================================================================== custome compile options end
 
+# ============================================================================== cmake 脚本
+
+# include 指令用法：
+# include(<file|module> [OPTIONAL] [RESULT_VARIABLE <VAR>] [NO_POLICY_SCOPE])
+# 可知 include 指令用来载入并运行来自于文件或模块的 CMake 代码。
+
+# (1)  cmake文件里面通常包含的信息:
+#     - '.cmake文件'里包含了一些"公共(复用)"的'cmake命令'和一些'宏|函数'
+#     - 当CMakeLists.txt'包含该.cmake文件'时,当'编译'运行时,该.cmake里的一些命令就会
+#       在该'包含处'得到加载'执行',在'后续'能够'调用该.cmake里'的一些宏和函数
+#     - .cmake文件是一个'模块(module)文件',可以被'include'到CMakeLists.txt中
+# 注意：cmake'脚本'不要包含'工程之类'的信息 -->例如:add_subdirectory()、CMAKE_CURRENT_之类的
+#       cmake'不要'调用CMakeLists.txt
+# 
+# (2) .cmake模块文件被加载的时机是在CMakeLists.txt 中
+#     - include(module_name|file)
+#     - find_package(module_name)
+# 注意：这两种加载方式是有区别的,或者说find_package中'.cmake全文件名'有一定的要求。
+#       另外如果加载的是文件(file)，则需要在命令中添加 .cmake 后缀，如果是模块，则不需要
+#       .cmake 后缀，例如：
+#           include(OpenCV)
+#           include(my_file.cmake)
+
+# 普通文件(file)
+# 1）相对路径: 是相对include指令所在的CMakeLists.txt的路径
+# 2）绝对路径(建议): 一般我们会将'cmake'文件放到cmake目录下,所以前缀一般是：
+#    CMAKE_CURRENT_SOURCE_DIR/cmake/file
+# 注意：这里的'file'文件,必须以'.cmake'结尾
+# 
+# 模块文件(module)
+# 1）首先搜索'Cmake builtin module directory' -->'cmake 内置的module目录'-->'centos7 /usr/share/cmake/MOdules/'
+# 2）找不到'再搜索'-->'CMAKE_MODULE_PATH'
+# 3）再找不到,则'报错'-->'NOTFOUND'
+# 注意：include 命令中非'.cmake'结尾的文件表示是'module'-->会自动查找'内建-->CMAKE_MODULE_PATH'路径下的"module_name.cmake"文件
+#       另外这里的搜索路径是 include 的搜索路径，可能与 find_packet 会有区分
+#
+# include(src/CMakeLists.txt) -->cmake也可以这样做,但是相对'add_subdirectory(src)',我们'不推荐'前者
+# 原因： include破坏了'Build Tree'的机制-->不能将'Source Tree'在'build'下'映射'成'Build Tree'
+
+# 同样需要加在 ADD_SUBDIRECTORY 之前才能传递到子目录
+INCLUDE("src/main.cmake")
+
+# ============================================================================== cmake 脚本 end
+
 
 # 指定生成目标
 # ADD_EXECUTABLE(Demo ${DIR_SRCS})
@@ -197,6 +241,70 @@ INSTALL(FILES "${PROJECT_BINARY_DIR}/config.h" DESTINATION include)
 #     <name>_INCLUDE_DIRS 或 <name>_INCLUDES
 #     <name>_LIBRARIES 或 <name>_LIBS
 #     <name>_DEFINITIONS
+
+
+# find_packet()的用法:
+# find_packet()有两种模式，Module模式和Config模式，其中Module模式是基础用法，Config模式较为复杂。
+# Module模式下，如果按照用户指定的配置找不到包，主会自动进入Config模式
+# 
+# - Module模式:
+# find_package(<PackageName> [version] [EXACT] [QUIET] [MODULE] [REQUIRED]
+#              [[COMPONENTS] [components...]] [OPTIONAL_COMPONENTS components...]
+#              [NO_POLICY_SCOPE])
+# 其中：
+#   version 如果指定就必须检查找到的包的版本是否与version兼容
+#   EXACT 与version配合使用，如果指定version的同时又指定EXACT，必须检查找到的包的版本是否与version匹配
+#   QUIET 如果查找失败，不会在屏幕上输出（如果指定了REQUIRED，则QUIET失效）
+#   MODULE 只在Module模式下查找
+#   REQUIRED 表示一定要找到包，如果失败则停止cmake
+#   COMPONENTS components 表示一定要找到组件，如果失败则停止cmake
+#   OPTIONAL_COMPONENTS components 表示找不到组件，也继续执行cmake
+# 
+# 查找顺序：Module 模式下查找名为 Find<PackageName>.cmake 的文件，
+#     先在 CMAKE_MODULE_PATH 变量对应的路径下查找，如果路径为空或者查找失败，
+#     则在 cmake 安装时的module目录下查找，如：/usr/lib/x86_64-linux-gnu/cmake
+#
+# - Config模式：
+# find_package(<PackageName> [version] [EXACT] [QUIET] [REQUIRED] [[COMPONENTS] [components...]]
+#              [CONFIG|NO_MODULE] [NO_POLICY_SCOPE] [NAMES name1 [name2 ...]]
+#              [CONFIGS config1 [config2 ...]] [HINTS path1 [path2 ... ]] [PATHS path1 [path2 ... ]]
+#              [PATH_SUFFIXES suffix1 [suffix2 ...]] [NO_DEFAULT_PATH] [NO_PACKAGE_ROOT_PATH]
+#              [NO_CMAKE_PATH] [NO_CMAKE_ENVIRONMENT_PATH] [NO_SYSTEM_ENVIRONMENT_PATH]
+#              [NO_CMAKE_PACKAGE_REGISTRY] [NO_CMAKE_BUILDS_PATH] # Deprecated; does nothing.
+#              [NO_CMAKE_SYSTEM_PATH] [NO_CMAKE_SYSTEM_PACKAGE_REGISTRY]
+#              [CMAKE_FIND_ROOT_PATH_BOTH | ONLY_CMAKE_FIND_ROOT_PATH | NO_CMAKE_FIND_ROOT_PATH])
+# 查找顺序：Config模式下查找名为 <PackageName>.Config.cmake 或 <lower-case-package-name>-config.cmake 的文件
+# 查找顺序如下：
+#   1. <PackageName>_ROOT 的cmake变量或者环境变量
+#      注意：如果指定了 <PackageName>_DIR cmake变量，那么 <PackageName>_ROOT 将不起作用
+#   2. cmake特定的缓存变量
+#      CMAKE_PREFIX_PATH
+#      CMAKE_FRAMEWORK_PATH
+#      CMAKE_APPBUNDLE_PATH
+#      可以通过设定NO_CMAKE_PATH来关闭这一查找顺序
+#   3. cmake待定的环境变量
+#      <PackageName>_DIR
+#      CMAKE_PREFIX_PATH
+#      CMAKE_FRAMEWORK_PATH
+#      CMAKE_APPBUNDLE_PATH
+#      可以通过NO_CMAKE_ENVIRONMENT_PATH来跳过
+#   4. HINT字段指定的路径
+#   5. 系统环境变量PATH
+#      其中如果是以/bin或者/sbin结尾的，会自动转化为其父目录
+#      通过指定NO_SYSTEM_ENVIRONMENT_PATH来跳过
+#   6. 存储在cmake的"User Package Registry"(用户包注册表)中的路径。
+#      通过设定NO_CMAKE_PACKAGE_REGISTRY，或者：设定CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY为true来避开
+#   7. 设定为当前系统定义的cmake变量：
+#      CMAKE_SYSTEM_PREFIX_PATH
+#      CMAKE_SYSTEM_FRAMEWORK_PATH
+#      CMAKE_SYSTEM_APPBUNDLE_PATH
+#      通过设定NO_CMAKE_SYSTEM_PATH来跳过
+#   8. 在cmake的"System Package Registry"(系统包注册表）中查找。
+#      通过设定NO_CMAKE_SYSTEM_PACKAGE_REGISTRY跳过。或者通过设定
+#      CMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY为true
+#   9. 从PATHS字段指定的路径中查找
+
+
 message(STATUS "    CMAKE_MODULE_PATH: " ${CMAKE_MODULE_PATH})
 FIND_PACKAGE(OpenCV REQUIRED)
 IF(NOT OpenCV_FOUND)
