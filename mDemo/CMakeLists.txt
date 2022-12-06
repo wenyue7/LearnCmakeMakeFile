@@ -125,6 +125,8 @@ MESSAGE(STATUS "    USE_MYMATH is: " ${USE_MYMATH})
 # 是否加入 MathFunctions 库
 if (USE_MYMATH)
     MESSAGE(STATUS "    USE_MYMATH is valid")
+    # 这里关闭是因为在 config.h.in 中有定义，正常添加宏定义是需要打开的
+    # ADD_DEFINITIONS(-DUSE_MYMATH)  
     INCLUDE_DIRECTORIES ("${PROJECT_SOURCE_DIR}/src/math")
     ADD_SUBDIRECTORY (src/math)
     SET (EXTRA_LIBS ${EXTRA_LIBS} mathFunctions)
