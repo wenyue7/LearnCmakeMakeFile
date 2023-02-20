@@ -18,6 +18,7 @@
 
 int main(int argc, char* argv[])
 {
+    int tmp;
     printf("version: %s\n", GIT_VERSION);
     printf("author:  %s\n", GIT_AUTHOR);
     printf("date:    %s\n", GIT_DATE);

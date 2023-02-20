@@ -1,4 +1,4 @@
-# ============================================================================== base options end
+# ============================================================================== base options
 #指定运行此配置文件所需的 CMake 的最低版本
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -61,14 +61,51 @@ MESSAGE(STATUS "    CMAKE_CURRENT_LIST_LINE: " ${CMAKE_CURRENT_LIST_LINE})
 MESSAGE(STATUS "    CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
 MESSAGE(STATUS "    CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
 
+# ============================================================================== base options end
+
+# ============================================================================== compile options
+# 编译选项相关的CMake 变量如下：
+# CMAKE_C_FLAGS =
+# CMAKE_C_FLAGS_DEBUG = -g
+# CMAKE_C_FLAGS_MINSIZEREL = -Os -DNDEBUG
+# CMAKE_C_FLAGS_RELEASE = -O3 -DNDEBUG
+# CMAKE_C_FLAGS_RELWITHDEBINFO = -O2 -g -DNDEBUG
+# 
+# CMAKE_CXX_FLAGS =
+# CMAKE_CXX_FLAGS_DEBUG = -g
+# CMAKE_CXX_FLAGS_MINSIZEREL = -Os -DNDEBUG
+# CMAKE_CXX_FLAGS_RELEASE = -O3 -DNDEBUG
+# CMAKE_CXX_FLAGS_RELWITHDEBINFO = -O2 -g -DNDEBUG
+# 等号右边是通过在CMakeLists.txt中打印对应变量得到的默认值。
+# 对于C语言设置CMAKE_C_FLAGS相关参数，C++语言设置CMAKE_CXX_FLAGS相关参数。
+# 并且分为DEBUG，RELEASE，MINSIZEREL和RELWITHDEBINFO四种类型。
+#
+# 以C++语言编译选项为例：
+# CMAKE_CXX_FLAGS_DEBUG：编译Debug版本的时候会采用的编译选项，默认只有一个-g选项，包含调试信息；
+# CMAKE_CXX_FLAGS_RELEASE：编译Release版本的时候采用的编译选项，默认包-O3选项，该选项表示优化等级；
+# CMAKE_CXX_FLAGS_MINSIZEREL：主要减小目标文件大小，选项-Os就是这个作用；
+# CMAKE_CXX_FLAGS_RELWITHDEBINFO：包含调试信息的Release版本，-O2和-g，优化的同时也包含了调试信息；
+# CMAKE_CXX_FLAGS：这个选项没有默认值；
+# 公共的选项，不管是Release还是Debug都需要设置。这种情况还可以把公共的设置放在CMAKE_CXX_FLAGS变量里面
+
 # 让 CMake 支持 gdb 只需要指定 Debug 模式下开启 -g 选项:
 # 如果以变量作为 if 的判断条件，只要非空就是有效
-SET(CMAKE_BUILD_TYPE "Debug")
-if(CMAKE_BUILD_TYPE)
-    MESSAGE(STATUS "    -- enter CMAKE_BUILD_TYPE --")
-endif(CMAKE_BUILD_TYPE)
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+# 可以通过-DCMAKE_BUILD_TYPE=Release 或者 -D CMAKE_BUILD_TYPE=Release 参数在编译时修改
+if(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE "Debug")
+endif(NOT CMAKE_BUILD_TYPE)
+MESSAGE(STATUS "    -- enter CMAKE_BUILD_TYPE " ${CMAKE_BUILD_TYPE})
+# 以下参数同样可以在使用cmake 时通过 -D 参数修改
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra") # debug 和 release 都会使用的公用flag
+SET(CMAKE_C_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -g -ggdb")
+SET(CMAKE_C_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -g -ggdb")
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3")
+# add_compile_options 不区分编译器
+# add_compile_options("-Wall")
+# add_compile_options("-Wextra")
+
 # 指定编译器
 # SET(CMAKE_C_COMPILER "/usr/bin/arm-linux-gnueabihf-gcc")
 # SET(CMAKE_CXX_COMPILER "/usr/.....")
@@ -89,8 +126,7 @@ MESSAGE(STATUS "    After set LIBRARY_OUTPUT_PATH: " ${LIBRARY_OUTPUT_PATH})
 # 指定生成可执行文件后的存放路径
 # 该设置也可以跟随 ADD_EXECUTABLE 指令，放在该指令之前，这样控制更精确
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-# ============================================================================== base options end
-
+# ============================================================================== compile options end
 
 # ============================================================================== custome compile options
 # configure_file(<input> <output> [COPYONLY] [ESCAPE_QUOTES] [@ONLY] [NEWLINE_STYLE [UNIX|DOS|WIN32|LF|CRLF] ])
