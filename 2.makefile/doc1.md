@@ -387,9 +387,59 @@ cleandiff :
 ```
 “make cleanall”将清除所有要被清除的文件。“cleanobj”和“cleandiff”这两个伪目标有点像“子程序”的意思。我们可以输入“make cleanall”和“make cleanobj”和“make cleandiff”命令来达到清除不同种类文件的目的。
 
+## 同名目标（默认目标）
+对于同名目标，会有如下处理：
+1. 后边的同名目标会覆盖前边的同名目标，
+2. 后边的同名目标会保留前一个同名目标的依赖关系
+3. 前一个目标的命令会被丢弃只执行后边目标的命令
+4. 如果多个同名目标中的一个是文件的第一个目标，那么这一系列的同名目标都是该文件的默认目标
+
+举例：
+```makefile
+all2: test.cdef
+	@echo "build $@ 1"
+
+all:
+	@echo "build $@"
+
+all2: test.cpp
+	@echo "build $@ 2"
+
+all2: test.cpp
+	@echo "build $@ 3"
+```
+这里 test.cpp 存在，但是 test.cdef 不存在，执行后有如下打印
+```makefile
+# 第二个同名目标覆盖第一个同名目标
+Makefile:9: warning: overriding recipe for target 'all2'
+# 忽略第一个同名目标的命令
+Makefile:3: warning: ignoring old recipe for target 'all2'
+# 第三个同名目标覆盖第二个同名目标
+Makefile:12: warning: overriding recipe for target 'all2'
+# 忽略第二个同名目标的命令
+Makefile:9: warning: ignoring old recipe for target 'all2'
+# 前边的依赖关系被保存
+make: *** No rule to make target 'test.cdef', needed by 'all2'.  Stop.
+```
+
+如果去掉 test.cdef 的依赖，则会得到如下打印
+```makefile
+all2:
+
+all:
+	@echo "build $@"
+
+all2: test.cpp
+	@echo "build $@ 2"
+
+$ make
+$ build all2 2
+```
+虽然第一条 all2 是空的，但是这事all2被当作了默认目标来处理，后边的all2目标也会同时被当作同名的默认目标来处理，在Linux的makefile中会有这种使用方法
+
 ## 多目标
 
-多目标¶
+多目标
 Makefile的规则中的目标可以不止一个，其支持多目标，有可能我们的多个目标同时依赖于一个文件，并且其生成的命令大体类似。于是我们就能把其合并起来。当然，多个目标的生成规则的执行命令不是同一个，这可能会给我们带来麻烦，不过好在我们可以使用一个自动化变量 $@ （关于自动化变量，将在后面讲述），这个变量表示着目前规则中所有的目标的集合，这样说可能很抽象，还是看一个例子吧。
 ```makefile
 bigoutput littleoutput : text.g
