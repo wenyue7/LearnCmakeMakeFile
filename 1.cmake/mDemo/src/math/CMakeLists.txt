@@ -10,5 +10,11 @@ AUX_SOURCE_DIRECTORY(. DIR_LIB_SRCS_MATH)
 ADD_LIBRARY (mathFunctions STATIC ${DIR_LIB_SRCS_MATH})
 ADD_LIBRARY (mathFunctions2 SHARED ${DIR_LIB_SRCS_MATH})
 ADD_LIBRARY (mathFunctions3 MODULE ${DIR_LIB_SRCS_MATH})
+# 另外还可以是 OBJECT 类型，一个OBJECT库类型定义了一系列从源码编译得来的object文件，
+# object文件集合可以通过$<TARGET_OBJECT:name>语法来作为其他target的输入
+# 这是一个生成表达式可以用来给其他target提供OBJECT库：
+ADD_LIBRARY (mathFunctions4 OBJECT ${DIR_LIB_SRCS_MATH})
+# add_executable(demo $<TARGET_OBJECT:mathFunctions4> <其他的源文件>)
+# TARGET_LINK_LIBRARIES (demo  $<TARGET_OBJECTS:mathFunctions4>)
 
 MESSAGE(STATUS "-------- DIR: SRC/MATH END --------")
