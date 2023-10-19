@@ -11,5 +11,10 @@ int main()
 {
     printf("hello world!\n");
 
+#ifdef MCRO_TEST
+    printf("have define %s\n", "MCRO_TEST");
+#endif
+    printf("MCRO_TEST2 val:%s\n", MCRO_TEST2);
+
     return 0;
 }
